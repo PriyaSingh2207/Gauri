@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gauri — Women's Health Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Palette */
+  --sky:#C8E6F5;         /* Soft Sky Blue */
+  --sky-deep:#7FB3D3;    /* deeper sky accent */
+  --parchment:#FAF6EE;   /* Parchment White – page bg */
+  --crema:#C8A97A;       /* Coffee Crema – warm accent */
+  --crema-light:#EDD9B8; /* light crema tint */
+  --crema-dark:#8B6340;  /* dark crema for text */
+  --cornflower:#6A8FD8;  /* Cornflower Blue – primary action */
+  --cornflower-deep:#3F6ABF; /* deeper cornflower */
+  --lace:#D6C8DC;        /* Shadowed Lace – surface tint */
+  --lace-mid:#B8A6C2;    /* mid lace border */
+  --lace-deep:#7A6485;   /* deep lace for accents */
+
+  /* Surfaces */
+  --bg:var(--parchment);
+  --surface:#FFFFFF;
+  --surface2:#F0EAF5;    /* lace-tinted surface */
+  --surface3:#E3D8EC;    /* deeper lace surface */
+
+  /* Semantic aliases kept for minimal JS/CSS changes */
+  --rose:var(--cornflower);
+  --rose-light:var(--sky-deep);
+  --rose-glow:rgba(106,143,216,0.12);
+  --gold:var(--crema);
+  --gold-light:var(--crema-light);
+  --teal:var(--crema-dark);
+  --teal-light:var(--crema);
+  --lavender:var(--lace-deep);
+  --lavender-light:var(--lace-mid);
+
+  --text:#2C2240;
+  --text2:rgba(44,34,64,0.65);
+  --text3:rgba(44,34,64,0.38);
+  --border:rgba(106,143,216,0.15);
+  --border2:rgba(106,143,216,0.3);
+  --radius:12px;--radius-sm:8px;
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+
+/* LAYOUT */
+.app{display:grid;grid-template-columns:220px 1fr;grid-template-rows:1fr;height:100vh}
+.sidebar{background:linear-gradient(160deg,#3F6ABF 0%,#6A8FD8 60%,#7FB3D3 100%);border-right:1px solid rgba(63,106,191,0.2);display:flex;flex-direction:column;padding:0}
+.main{overflow-y:auto;background:var(--bg)}
+
+/* SIDEBAR */
+.brand{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.15)}
+.brand-icon{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.25);border:1.5px solid rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#fff;margin-bottom:10px}
+.brand-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#fff}
+.brand-sub{font-size:10px;color:rgba(255,255,255,0.6);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+.nav{flex:1;padding:16px 12px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s;margin-bottom:4px;font-size:13px;color:rgba(255,255,255,0.75)}
+.nav-item:hover{background:rgba(255,255,255,0.15);color:#fff}
+.nav-item.active{background:rgba(255,255,255,0.22);color:#fff;border:1px solid rgba(255,255,255,0.3)}
+.nav-icon{font-size:16px;width:20px;text-align:center}
+.sidebar-footer{padding:16px;border-top:1px solid rgba(255,255,255,0.15)}
+.privacy-badge{display:flex;align-items:center;gap:8px;font-size:11px;color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.12);padding:8px 12px;border-radius:var(--radius-sm)}
+
+/* MAIN HEADER */
+.page-header{padding:32px 40px 0;display:flex;align-items:flex-start;justify-content:space-between}
+.page-title{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:var(--text);line-height:1.1}
+.page-title em{color:var(--cornflower-deep);font-style:italic}
+.page-sub{font-size:13px;color:var(--text3);margin-top:6px}
+.page-content{padding:24px 40px 40px}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:0 1px 4px rgba(106,143,216,0.07)}
+.card-title{font-size:13px;font-weight:500;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card-title span{color:var(--cornflower)}
+
+/* CYCLE MODULE */
+.cycle-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.input-group{display:flex;flex-direction:column;gap:6px}
+label{font-size:12px;color:var(--text3);letter-spacing:0.5px}
+input[type=date],input[type=number],input[type=text],select,textarea{
+  background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;font-family:'DM Sans',sans-serif;
+  outline:none;transition:border 0.2s;width:100%
+}
+input:focus,select:focus,textarea:focus{border-color:rgba(106,143,216,0.5);background:#fff}
+select option{background:#fff;color:var(--text)}
+textarea{resize:vertical;min-height:80px}
+
+/* CYCLE CALENDAR */
+.cycle-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:16px 0}
+.cal-header{text-align:center;font-size:10px;color:var(--text3);padding:4px 0;letter-spacing:1px}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:11px;cursor:pointer;transition:all 0.15s;color:var(--text2);background:var(--surface2);border:1px solid transparent}
+.cal-day:hover{border-color:var(--border2)}
+.cal-day.period{background:rgba(106,143,216,0.2);color:var(--cornflower-deep);border-color:rgba(106,143,216,0.35)}
+.cal-day.ovulation{background:rgba(200,169,122,0.25);color:var(--crema-dark);border-color:rgba(200,169,122,0.4)}
+.cal-day.fertile{background:rgba(127,179,211,0.25);color:#2A6A8A;border-color:rgba(127,179,211,0.35)}
+.cal-day.today{border-color:var(--cornflower)!important;font-weight:500}
+.cal-day.empty{background:transparent;border:none;cursor:default}
+.legend{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3)}
+.legend-dot{width:8px;height:8px;border-radius:2px}
+
+/* SYMPTOMS */
+.symptom-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.symptom-chip{padding:10px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:all 0.15s;text-align:center;font-size:11px;color:var(--text2)}
+.symptom-chip:hover{border-color:var(--border2);color:var(--text)}
+.symptom-chip.selected{border-color:rgba(106,143,216,0.5);background:rgba(200,230,245,0.5);color:var(--cornflower-deep)}
+.symptom-chip .s-icon{font-size:18px;display:block;margin-bottom:4px}
+.intensity-row{display:flex;align-items:center;gap:12px;margin:12px 0}
+.intensity-label{font-size:12px;color:var(--text3);white-space:nowrap}
+input[type=range]{flex:1;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--surface3);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--cornflower);cursor:pointer}
+.intensity-val{font-size:13px;font-weight:500;color:var(--cornflower);min-width:16px}
+
+/* MOOD */
+.mood-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.mood-btn{padding:14px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:all 0.15s;text-align:center;font-size:11px;color:var(--text2)}
+.mood-btn:hover{border-color:var(--border2)}
+.mood-btn.selected{border-color:rgba(122,100,133,0.45);background:rgba(214,200,220,0.4);color:var(--lace-deep)}
+.mood-btn .m-icon{font-size:24px;display:block;margin-bottom:6px}
+
+/* PCOS */
+.pcos-indicators{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.pcos-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border);cursor:pointer;transition:all 0.15s}
+.pcos-item:hover{border-color:var(--border2)}
+.pcos-item.checked{border-color:rgba(200,169,122,0.5);background:rgba(237,217,184,0.35)}
+.pcos-item input[type=checkbox]{display:none}
+.check-box{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s}
+.pcos-item.checked .check-box{background:var(--crema);border-color:var(--crema-dark)}
+.check-box::after{content:'✓';font-size:11px;color:#fff;display:none}
+.pcos-item.checked .check-box::after{display:block}
+.pcos-label{font-size:12px;color:var(--text2)}
+.risk-meter{margin-top:16px;padding:20px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border)}
+.risk-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.risk-title{font-size:13px;color:var(--text2)}
+.risk-score{font-family:'Playfair Display',serif;font-size:28px;font-weight:700}
+.risk-bar-track{height:8px;background:var(--surface3);border-radius:4px;overflow:hidden}
+.risk-bar-fill{height:100%;border-radius:4px;transition:width 0.6s ease}
+.risk-note{font-size:11px;color:var(--text3);margin-top:8px}
+
+/* MEDICATIONS */
+.med-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:200px;overflow-y:auto}
+.med-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border)}
+.med-info{display:flex;flex-direction:column;gap:2px}
+.med-name{font-size:13px;color:var(--text)}
+.med-detail{font-size:11px;color:var(--text3)}
+.med-delete{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0 4px;line-height:1;transition:color 0.15s}
+.med-delete:hover{color:#B03030}
+.med-form{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
+
+/* HISTORY */
+.history-list{display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto}
+.history-entry{padding:14px 16px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border);border-left:3px solid var(--cornflower)}
+.history-entry.sym{border-left-color:var(--sky-deep)}
+.history-entry.pcos{border-left-color:var(--crema)}
+.history-entry.med{border-left-color:var(--lace-mid)}
+.h-date{font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:4px}
+.h-text{font-size:12px;color:var(--text2);line-height:1.6}
+.empty-state{text-align:center;padding:32px;color:var(--text3);font-size:13px}
+.empty-icon{font-size:28px;margin-bottom:8px}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:0 1px 4px rgba(106,143,216,0.07)}
+.stat-val{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--text);line-height:1}
+.stat-unit{font-size:12px;color:var(--text3);display:inline;font-family:'DM Sans',sans-serif;font-size:11px}
+.stat-lbl{font-size:11px;color:var(--text3);margin-top:4px}
+.stat-accent{height:2px;border-radius:1px;margin-top:10px}
+
+/* BTN */
+.btn{padding:10px 20px;border-radius:var(--radius-sm);border:none;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif}
+.btn-primary{background:var(--cornflower);color:#fff}
+.btn-primary:hover{background:var(--cornflower-deep)}
+.btn-secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--border2);color:var(--text)}
+.btn-sm{padding:7px 14px;font-size:12px}
+.btn-row{display:flex;gap:10px;margin-top:16px}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid rgba(106,143,216,0.35);color:var(--text);padding:12px 20px;border-radius:var(--radius);font-size:13px;transform:translateY(80px);opacity:0;transition:all 0.3s;z-index:999;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(106,143,216,0.15)}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* SECTION DIVIDER */
+.section-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--lace);border-radius:2px}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">G</div>
+      <div class="brand-name">Gauri</div>
+      <div class="brand-sub">Health Companion</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="showTab('cycle',this)"><span class="nav-icon">🩸</span> Cycle Tracker</div>
+      <div class="nav-item" onclick="showTab('symptoms',this)"><span class="nav-icon">💊</span> Symptoms</div>
+      <div class="nav-item" onclick="showTab('pcos',this)"><span class="nav-icon">🧬</span> PCOS Risk</div>
+      <div class="nav-item" onclick="showTab('meds',this)"><span class="nav-icon">💉</span> Medications</div>
+      <div class="nav-item" onclick="showTab('history',this)"><span class="nav-icon">📋</span> Health Log</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="privacy-badge">🔒 Anonymous · No login required</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main" id="main-content">
+    <!-- CYCLE TAB -->
+    <div id="tab-cycle" class="tab-content">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Cycle <em>Tracker</em></div>
+          <div class="page-sub">Log your menstrual cycle and predict upcoming phases</div>
+        </div>
+      </div>
+      <div class="page-content">
+        <div class="stats-row" id="cycle-stats">
+          <div class="stat-card"><div class="stat-val" id="st-cycle">—</div><div class="stat-lbl">Avg. cycle length</div><div class="stat-accent" style="background:var(--cornflower)"></div></div>
+          <div class="stat-card"><div class="stat-val" id="st-period">—</div><div class="stat-lbl">Avg. period length</div><div class="stat-accent" style="background:var(--sky-deep)"></div></div>
+          <div class="stat-card"><div class="stat-val" id="st-next">—</div><div class="stat-lbl">Days until next period</div><div class="stat-accent" style="background:var(--crema)"></div></div>
+          <div class="stat-card"><div class="stat-val" id="st-logged">0</div><div class="stat-lbl">Cycles logged</div><div class="stat-accent" style="background:var(--lace-mid)"></div></div>
+        </div>
+        <div class="section-row">
+          <div class="card">
+            <div class="card-title"><span>📅</span> Log Period</div>
+            <div class="cycle-grid">
+              <div class="input-group"><label>Start Date</label><input type="date" id="period-start"></div>
+              <div class="input-group"><label>End Date</label><input type="date" id="period-end"></div>
+              <div class="input-group"><label>Flow Intensity</label>
+                <select id="period-flow">
+                  <option value="">Select flow</option>
+                  <option value="spotting">Spotting</option>
+                  <option value="light">Light</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="heavy">Heavy</option>
+                </select>
+              </div>
+              <div class="input-group"><label>Cycle Length (days)</label><input type="number" id="cycle-len" min="21" max="45" placeholder="28"></div>
+            </div>
+            <div class="btn-row"><button class="btn btn-primary" onclick="logPeriod()">Log Period</button></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span>🗓️</span> This Month</div>
+            <div class="cycle-calendar" id="cycle-cal"></div>
+            <div class="legend">
+              <div class="legend-item"><div class="legend-dot" style="background:rgba(194,24,91,0.5)"></div>Period</div>
+              <div class="legend-item"><div class="legend-dot" style="background:rgba(212,160,23,0.5)"></div>Ovulation</div>
+              <div class="legend-item"><div class="legend-dot" style="background:rgba(26,122,106,0.4)"></div>Fertile window</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span>📌</span> Cycle History</div>
+          <div id="cycle-history-list" class="history-list"><div class="empty-state"><div class="empty-icon">🩸</div>No cycles logged yet. Start by adding a period above.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SYMPTOMS TAB -->
+    <div id="tab-symptoms" class="tab-content" style="display:none">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Symptom <em>Journal</em></div>
+          <div class="page-sub">Track how you feel — physically and emotionally</div>
+        </div>
+      </div>
+      <div class="page-content">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title"><span>🌡️</span> Physical Symptoms</div>
+          <div class="symptom-grid">
+            <div class="symptom-chip" onclick="toggleSym(this,'cramps')"><span class="s-icon">😣</span>Cramps</div>
+            <div class="symptom-chip" onclick="toggleSym(this,'bloating')"><span class="s-icon">🫧</span>Bloating</div>
+            <div class="symptom-chip" onclick="toggleSym(this,'headache')"><span class="s-icon">🤕</span>Headache</div>
+            <div class="symptom-chip" onclick="toggleSym(this,'fatigue')"><span class="s-icon">😴</span>Fatigue</div>
+            <div class="symptom-chip" onclick="toggleSym(this,'backpain')"><span class="s-icon">🦴</span>Back Pain</div>
+            <div class="symptom-chip" onclick="toggleSym(this,'nausea')"><span class="s-icon">🤢</span>Nausea</div>
+            <div class="symptom-chip" onclick="toggleSym(this,'breast')"><span class="s-icon">⚡</span>Breast Pain</div>
+            <div class="symptom-chip" onclick="toggleSym(this,'acne')"><span class="s-icon">🔴</span>Acne</div>
+          </div>
+          <div class="intensity-row">
+            <span class="intensity-label">Pain intensity</span>
+            <input type="range" id="pain-intensity" min="1" max="10" value="3" oninput="document.getElementById('pain-val').textContent=this.value">
+            <span class="intensity-val" id="pain-val">3</span>
+            <span style="font-size:11px;color:var(--text3)">/10</span>
+          </div>
+        </div>
+        <div class="section-row">
+          <div class="card">
+            <div class="card-title"><span>🧠</span> Mood Today</div>
+            <div class="mood-grid">
+              <div class="mood-btn" onclick="selectMood(this,'Happy')"><span class="m-icon">😊</span>Happy</div>
+              <div class="mood-btn" onclick="selectMood(this,'Calm')"><span class="m-icon">😌</span>Calm</div>
+              <div class="mood-btn" onclick="selectMood(this,'Anxious')"><span class="m-icon">😰</span>Anxious</div>
+              <div class="mood-btn" onclick="selectMood(this,'Sad')"><span class="m-icon">😢</span>Sad</div>
+              <div class="mood-btn" onclick="selectMood(this,'Irritable')"><span class="m-icon">😤</span>Irritable</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span>✍️</span> Notes</div>
+            <textarea id="sym-notes" placeholder="Describe how you're feeling... anything unusual?"></textarea>
+            <div class="btn-row">
+              <button class="btn btn-primary" onclick="logSymptoms()">Save Entry</button>
+              <button class="btn btn-secondary" onclick="clearSymptoms()">Clear</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span>📋</span> Recent Symptom Log</div>
+          <div id="sym-history-list" class="history-list"><div class="empty-state"><div class="empty-icon">💊</div>No symptoms logged yet.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PCOS TAB -->
+    <div id="tab-pcos" class="tab-content" style="display:none">
+      <div class="page-header">
+        <div>
+          <div class="page-title">PCOS <em>Risk</em> Checker</div>
+          <div class="page-sub">Select symptoms you experience regularly to assess your PCOS risk</div>
+        </div>
+      </div>
+      <div class="page-content">
+        <div class="section-row">
+          <div class="card">
+            <div class="card-title"><span>🧬</span> Hormonal Indicators</div>
+            <div class="pcos-indicators">
+              <div class="pcos-item" onclick="togglePcos(this)" data-weight="15"><div class="check-box"></div><span class="pcos-label">Irregular periods (>35 day cycles)</span></div>
+              <div class="pcos-item" onclick="togglePcos(this)" data-weight="12"><div class="check-box"></div><span class="pcos-label">Missed periods (3+ months)</span></div>
+              <div class="pcos-item" onclick="togglePcos(this)" data-weight="10"><div class="check-box"></div><span class="pcos-label">Excess facial/body hair</span></div>
+              <div class="pcos-item" onclick="togglePcos(this)" data-weight="10"><div class="check-box"></div><span class="pcos-label">Thinning hair / hair loss</span></div>
+              <div class="pcos-item" onclick="togglePcos(this)" data-weight="8"><div class="check-box"></div><span class="pcos-label">Persistent acne on face/back</span></div>
+              <div class="pcos-item" onclick="togglePcos(this)" data-weight="8"><div class="check-box"></div><span class="pcos-label">Unexplained weight gain</span></div>
+              <div class="pcos-item" onclick="togglePcos(this)" data-weight="7"><div class="check-box"></div><span class="pcos-label">Difficulty losing weight</span></div>
+              <div class="pcos-item" onclick="togglePcos(this)" data-weight="7"><div class="check-box"></div><span class="pcos-label">Darkened skin patches (neck/armpits)</span></div>
+              <div class="pcos-item" onclick="togglePcos(this)" data-weight="6"><div class="check-box"></div><span class="pcos-label">Mood swings / depression</span></div>
+              <div class="pcos-item" onclick="togglePcos(this)" data-weight="5"><div class="check-box"></div><span class="pcos-label">Difficulty conceiving</span></div>
+              <div class="pcos-item" onclick="togglePcos(this)" data-weight="5"><div class="check-box"></div><span class="pcos-label">Fatigue & low energy</span></div>
+              <div class="pcos-item" onclick="togglePcos(this)" data-weight="7"><div class="check-box"></div><span class="pcos-label">Pelvic pain or pressure</span></div>
+            </div>
+          </div>
+          <div class="card" style="display:flex;flex-direction:column">
+            <div class="card-title"><span>📊</span> Risk Assessment</div>
+            <div class="risk-meter">
+              <div class="risk-header">
+                <span class="risk-title">Estimated PCOS Risk</span>
+                <span class="risk-score" id="risk-pct" style="color:var(--teal-light)">0%</span>
+              </div>
+              <div class="risk-bar-track"><div class="risk-bar-fill" id="risk-bar" style="width:0%;background:var(--teal)"></div></div>
+              <div class="risk-note" id="risk-note">Select symptoms above to see your risk level.</div>
+            </div>
+            <div style="flex:1"></div>
+            <div style="padding:16px;background:rgba(237,217,184,0.3);border-radius:var(--radius-sm);border:1px solid rgba(200,169,122,0.3);margin-top:16px">
+              <div style="font-size:11px;color:var(--crema-dark);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase">⚠ Disclaimer</div>
+              <div style="font-size:12px;color:var(--text3);line-height:1.7">This tool is for awareness only — not a medical diagnosis. A gynecologist can confirm PCOS through blood tests and ultrasound.</div>
+            </div>
+            <div class="btn-row"><button class="btn btn-primary" onclick="savePcosAssessment()">Save Assessment</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEDS TAB -->
+    <div id="tab-meds" class="tab-content" style="display:none">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Medications <em>& Notes</em></div>
+          <div class="page-sub">Track your medicines, supplements and health notes</div>
+        </div>
+      </div>
+      <div class="page-content">
+        <div class="section-row">
+          <div class="card">
+            <div class="card-title"><span>💊</span> Add Medication</div>
+            <div class="input-group" style="margin-bottom:10px"><label>Medication / Supplement Name</label><input type="text" id="med-name" placeholder="e.g. Folic Acid 5mg"></div>
+            <div class="med-form">
+              <div class="input-group"><label>Dosage</label><input type="text" id="med-dose" placeholder="e.g. 1 tablet"></div>
+              <div class="input-group"><label>Frequency</label>
+                <select id="med-freq">
+                  <option value="">Select</option>
+                  <option>Once daily</option><option>Twice daily</option><option>Three times daily</option>
+                  <option>Weekly</option><option>As needed</option>
+                </select>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="addMed()" style="align-self:flex-end;white-space:nowrap">+ Add</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span>📝</span> Health Notes</div>
+            <textarea id="health-notes" placeholder="Any notes for your next doctor visit, questions you want to ask, or health observations..."></textarea>
+            <div class="btn-row"><button class="btn btn-primary" onclick="saveNote()">Save Note</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span>💉</span> Current Medications</div>
+          <div id="med-list" class="med-list"><div class="empty-state"><div class="empty-icon">💊</div>No medications added yet.</div></div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-title"><span>📋</span> Saved Notes</div>
+          <div id="notes-list" class="history-list"><div class="empty-state"><div class="empty-icon">📝</div>No notes saved yet.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div id="tab-history" class="tab-content" style="display:none">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Health <em>Log</em></div>
+          <div class="page-sub">Your complete health timeline — everything in one place</div>
+        </div>
+      </div>
+      <div class="page-content">
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-val" id="ht-cycles">0</div><div class="stat-lbl">Cycles logged</div><div class="stat-accent" style="background:var(--cornflower)"></div></div>
+          <div class="stat-card"><div class="stat-val" id="ht-syms">0</div><div class="stat-lbl">Symptom entries</div><div class="stat-accent" style="background:var(--sky-deep)"></div></div>
+          <div class="stat-card"><div class="stat-val" id="ht-meds">0</div><div class="stat-lbl">Medications tracked</div><div class="stat-accent" style="background:var(--crema)"></div></div>
+          <div class="stat-card"><div class="stat-val" id="ht-pcos">—</div><div class="stat-lbl">Last PCOS risk check</div><div class="stat-accent" style="background:var(--lace-mid)"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:8px"><span>📋</span> Complete Health Timeline</div>
+            <button class="btn btn-secondary btn-sm" onclick="clearAll()">Clear All Data</button>
+          </div>
+          <div id="full-history" class="history-list" style="max-height:420px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ Saved successfully</div>
+
+<script>
+// State
+let state={cycles:[],symptoms:[],medications:[],notes:[],pcosAssessments:[]};
+let selectedSymptoms=new Set();
+let selectedMood='';
+
+function save(){localStorage.setItem('gauri_data',JSON.stringify(state))}
+function load(){try{const d=localStorage.getItem('gauri_data');if(d)state=JSON.parse(d)}catch(e){}}
+
+load();
+
+function toast(msg='Saved!'){
+  const t=document.getElementById('toast');
+  t.textContent='✓ '+msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function showTab(tab,el){
+  document.querySelectorAll('.tab-content').forEach(t=>t.style.display='none');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('tab-'+tab).style.display='block';
+  el.classList.add('active');
+  if(tab==='history')renderHistory();
+  if(tab==='cycle')renderCycleHistory();
+  if(tab==='symptoms')renderSymHistory();
+  if(tab==='meds')renderMeds();
+}
+
+// CYCLE
+function logPeriod(){
+  const start=document.getElementById('period-start').value;
+  const end=document.getElementById('period-end').value;
+  const flow=document.getElementById('period-flow').value;
+  const len=document.getElementById('cycle-len').value||28;
+  if(!start){toast('Please enter a start date');return;}
+  state.cycles.push({start,end,flow,cycleLen:parseInt(len),date:new Date().toISOString()});
+  save();renderCycleHistory();updateCycleStats();buildCalendar();
+  document.getElementById('period-start').value='';
+  document.getElementById('period-end').value='';
+  document.getElementById('period-flow').value='';
+  document.getElementById('cycle-len').value='';
+  toast('Period logged!');
+}
+
+function renderCycleHistory(){
+  const el=document.getElementById('cycle-history-list');
+  if(!state.cycles.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🩸</div>No cycles logged yet. Start by adding a period above.</div>';return;}
+  el.innerHTML=state.cycles.slice().reverse().map(c=>`<div class="history-entry"><div class="h-date">${formatDate(c.date)}</div><div class="h-text">Period: <strong>${c.start}</strong>${c.end?' → '+c.end:''} · Flow: ${c.flow||'—'} · Cycle: ${c.cycleLen} days</div></div>`).join('');
+}
+
+function updateCycleStats(){
+  const cycles=state.cycles;
+  document.getElementById('st-logged').textContent=cycles.length;
+  if(!cycles.length)return;
+  const avgLen=Math.round(cycles.reduce((a,c)=>a+c.cycleLen,0)/cycles.length);
+  document.getElementById('st-cycle').textContent=avgLen+'<span class="stat-unit"> days</span>';
+  const withEnd=cycles.filter(c=>c.end&&c.start);
+  if(withEnd.length){
+    const avgPer=Math.round(withEnd.reduce((a,c)=>{const d=(new Date(c.end)-new Date(c.start))/(1000*86400)+1;return a+d},0)/withEnd.length);
+    document.getElementById('st-period').textContent=avgPer+'<span class="stat-unit"> days</span>';
+  }
+  const last=cycles[cycles.length-1];
+  if(last&&last.start){
+    const nextDate=new Date(last.start);
+    nextDate.setDate(nextDate.getDate()+last.cycleLen);
+    const diff=Math.ceil((nextDate-new Date())/(1000*86400));
+    document.getElementById('st-next').textContent=(diff>=0?diff:'Overdue')+(diff>=0?'<span class="stat-unit"> days</span>':'');
+  }
+}
+
+function buildCalendar(){
+  const cal=document.getElementById('cycle-cal');
+  const now=new Date();const year=now.getFullYear();const month=now.getMonth();
+  const first=new Date(year,month,1);const last=new Date(year,month+1,0);
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  let html=days.map(d=>`<div class="cal-header">${d}</div>`).join('');
+  for(let i=0;i<first.getDay();i++)html+=`<div class="cal-day empty"></div>`;
+  const lastCycle=state.cycles.length?state.cycles[state.cycles.length-1]:null;
+  for(let d=1;d<=last.getDate();d++){
+    const date=new Date(year,month,d);
+    let cls='cal-day';
+    if(d===now.getDate())cls+=' today';
+    if(lastCycle){
+      const start=new Date(lastCycle.start);const end=lastCycle.end?new Date(lastCycle.end):null;
+      const nextStart=new Date(start);nextStart.setDate(nextStart.getDate()+lastCycle.cycleLen);
+      const ovDay=new Date(nextStart);ovDay.setDate(ovDay.getDate()-14);
+      if(end&&date>=start&&date<=end)cls+=' period';
+      else if(Math.abs(date-ovDay)<86400*1.5)cls+=' ovulation';
+      else if(date>new Date(ovDay.getTime()-5*86400000)&&date<new Date(ovDay.getTime()+2*86400000)&&!(end&&date>=start&&date<=end))cls+=' fertile';
+    }
+    html+=`<div class="${cls}">${d}</div>`;
+  }
+  cal.innerHTML=html;
+}
+
+// SYMPTOMS
+function toggleSym(el,name){el.classList.toggle('selected');if(el.classList.contains('selected'))selectedSymptoms.add(name);else selectedSymptoms.delete(name);}
+function selectMood(el,mood){document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');selectedMood=mood;}
+
+function logSymptoms(){
+  const pain=document.getElementById('pain-intensity').value;
+  const notes=document.getElementById('sym-notes').value;
+  if(!selectedSymptoms.size&&!selectedMood){toast('Select at least one symptom or mood');return;}
+  state.symptoms.push({symptoms:Array.from(selectedSymptoms),mood:selectedMood,pain:parseInt(pain),notes,date:new Date().toISOString()});
+  save();renderSymHistory();clearSymptoms();toast('Symptoms saved!');
+}
+
+function clearSymptoms(){
+  document.querySelectorAll('.symptom-chip').forEach(c=>c.classList.remove('selected'));
+  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('pain-intensity').value=3;document.getElementById('pain-val').textContent=3;
+  document.getElementById('sym-notes').value='';selectedSymptoms.clear();selectedMood='';
+}
+
+function renderSymHistory(){
+  const el=document.getElementById('sym-history-list');
+  if(!state.symptoms.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">💊</div>No symptoms logged yet.</div>';return;}
+  el.innerHTML=state.symptoms.slice().reverse().map(s=>`<div class="history-entry sym"><div class="h-date">${formatDate(s.date)}</div><div class="h-text">${s.symptoms.length?s.symptoms.join(', '):''}${s.mood?' · Mood: '+s.mood:''} · Pain: ${s.pain}/10${s.notes?' · '+s.notes:''}</div></div>`).join('');
+}
+
+// PCOS
+function togglePcos(el){el.classList.toggle('checked');updatePcosRisk();}
+function updatePcosRisk(){
+  const checked=document.querySelectorAll('.pcos-item.checked');
+  const total=Array.from(checked).reduce((a,el)=>a+parseInt(el.dataset.weight||5),0);
+  const maxScore=100;const pct=Math.min(Math.round(total/maxScore*100*1.2),100);
+  const bar=document.getElementById('risk-bar');const score=document.getElementById('risk-pct');const note=document.getElementById('risk-note');
+  score.textContent=pct+'%';bar.style.width=pct+'%';
+  if(pct<25){bar.style.background='#6A8FD8';score.style.color='#3F6ABF';note.textContent='Low risk. Keep monitoring your cycle health.'}
+  else if(pct<55){bar.style.background='#C8A97A';score.style.color='#8B6340';note.textContent='Moderate risk. Consider discussing this with a gynecologist.'}
+  else{bar.style.background='#B85C5C';score.style.color='#8B2020';note.textContent='High risk. We strongly recommend a consultation with a gynecologist soon.'}
+}
+
+function savePcosAssessment(){
+  const pct=document.getElementById('risk-pct').textContent;
+  const syms=Array.from(document.querySelectorAll('.pcos-item.checked')).map(el=>el.querySelector('.pcos-label').textContent);
+  state.pcosAssessments.push({risk:pct,symptoms:syms,date:new Date().toISOString()});
+  save();toast('PCOS assessment saved!');
+}
+
+// MEDS
+function addMed(){
+  const name=document.getElementById('med-name').value.trim();
+  const dose=document.getElementById('med-dose').value.trim();
+  const freq=document.getElementById('med-freq').value;
+  if(!name){toast('Please enter a medication name');return;}
+  state.medications.push({name,dose,freq,date:new Date().toISOString(),id:Date.now()});
+  save();renderMeds();
+  document.getElementById('med-name').value='';document.getElementById('med-dose').value='';document.getElementById('med-freq').value='';
+  toast('Medication added!');
+}
+
+function deleteMed(id){state.medications=state.medications.filter(m=>m.id!==id);save();renderMeds();}
+
+function renderMeds(){
+  const el=document.getElementById('med-list');
+  if(!state.medications.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">💊</div>No medications added yet.</div>';return;}
+  el.innerHTML=state.medications.map(m=>`<div class="med-item"><div class="med-info"><div class="med-name">${m.name}</div><div class="med-detail">${m.dose||'—'} · ${m.freq||'—'}</div></div><button class="med-delete" onclick="deleteMed(${m.id})">✕</button></div>`).join('');
+  renderNotes();
+}
+
+function saveNote(){
+  const text=document.getElementById('health-notes').value.trim();
+  if(!text){toast('Please write a note first');return;}
+  state.notes.push({text,date:new Date().toISOString()});
+  save();document.getElementById('health-notes').value='';renderNotes();toast('Note saved!');
+}
+
+function renderNotes(){
+  const el=document.getElementById('notes-list');
+  if(!state.notes.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📝</div>No notes saved yet.</div>';return;}
+  el.innerHTML=state.notes.slice().reverse().map(n=>`<div class="history-entry med"><div class="h-date">${formatDate(n.date)}</div><div class="h-text">${n.text}</div></div>`).join('');
+}
+
+// HISTORY
+function renderHistory(){
+  const all=[
+    ...state.cycles.map(c=>({...c,type:'cycle',ts:new Date(c.date).getTime()})),
+    ...state.symptoms.map(s=>({...s,type:'sym',ts:new Date(s.date).getTime()})),
+    ...state.medications.map(m=>({...m,type:'med',ts:new Date(m.date).getTime()})),
+    ...state.notes.map(n=>({...n,type:'note',ts:new Date(n.date).getTime()})),
+    ...state.pcosAssessments.map(p=>({...p,type:'pcos',ts:new Date(p.date).getTime()})),
+  ].sort((a,b)=>b.ts-a.ts);
+  document.getElementById('ht-cycles').textContent=state.cycles.length;
+  document.getElementById('ht-syms').textContent=state.symptoms.length;
+  document.getElementById('ht-meds').textContent=state.medications.length;
+  if(state.pcosAssessments.length)document.getElementById('ht-pcos').textContent=state.pcosAssessments[state.pcosAssessments.length-1].risk;
+  const el=document.getElementById('full-history');
+  if(!all.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div>Your health log is empty. Start tracking to see your timeline here.</div>';return;}
+  el.innerHTML=all.map(e=>{
+    if(e.type==='cycle')return`<div class="history-entry"><div class="h-date">${formatDate(e.date)} · 🩸 Cycle Log</div><div class="h-text">Period ${e.start}${e.end?' → '+e.end:''} · Flow: ${e.flow||'—'} · Cycle length: ${e.cycleLen} days</div></div>`;
+    if(e.type==='sym')return`<div class="history-entry sym"><div class="h-date">${formatDate(e.date)} · 💊 Symptoms</div><div class="h-text">${e.symptoms.join(', ')||'None selected'}${e.mood?' · Mood: '+e.mood:''} · Pain: ${e.pain}/10${e.notes?'<br>'+e.notes:''}</div></div>`;
+    if(e.type==='med')return`<div class="history-entry med"><div class="h-date">${formatDate(e.date)} · 💉 Medication Added</div><div class="h-text">${e.name} · ${e.dose||'—'} · ${e.freq||'—'}</div></div>`;
+    if(e.type==='note')return`<div class="history-entry med"><div class="h-date">${formatDate(e.date)} · 📝 Note</div><div class="h-text">${e.text}</div></div>`;
+    if(e.type==='pcos')return`<div class="history-entry pcos"><div class="h-date">${formatDate(e.date)} · 🧬 PCOS Assessment</div><div class="h-text">Estimated risk: <strong>${e.risk}</strong>${e.symptoms.length?' · Symptoms: '+e.symptoms.slice(0,3).join(', ')+(e.symptoms.length>3?'...':''):''}</div></div>`;
+    return '';
+  }).join('');
+}
+
+function clearAll(){
+  if(confirm('This will delete all your health data. Are you sure?')){
+    state={cycles:[],symptoms:[],medications:[],notes:[],pcosAssessments:[]};
+    save();renderHistory();toast('All data cleared');
+  }
+}
+
+function formatDate(iso){
+  const d=new Date(iso);
+  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+// INIT
+updateCycleStats();buildCalendar();renderCycleHistory();
+</script>
+</body>
+</html>
