@@ -11,8 +11,23 @@ export default function SymptomsJournal({ user, isAnonymous, data, saveData, sho
 
   const logs = data.symptoms || []
 
-  const symptomsList = ['cramps', 'bloating', 'headache', 'acne', 'breast', 'fatigue']
-  const moods = ['happy', 'calm', 'anxious', 'sad', 'irritable', 'energetic']
+  const symptomsList = [
+    { id: 'cramps', icon: '🩸' },
+    { id: 'bloating', icon: '🎈' },
+    { id: 'headache', icon: '🧠' },
+    { id: 'acne', icon: '✨' },
+    { id: 'breast', icon: '🎗️' },
+    { id: 'fatigue', icon: '😴' }
+  ]
+
+  const moods = [
+    { id: 'happy', icon: '😊' },
+    { id: 'calm', icon: '😌' },
+    { id: 'anxious', icon: '😰' },
+    { id: 'sad', icon: '😢' },
+    { id: 'irritable', icon: '😠' },
+    { id: 'energetic', icon: '⚡' }
+  ]
 
   const toggleSymptom = (s) => {
     if (selectedSymptoms.includes(s)) {
@@ -40,19 +55,10 @@ export default function SymptomsJournal({ user, isAnonymous, data, saveData, sho
     }
 
     if (isAnonymous) {
-      const mockInserted = {
+      const formatted = {
         id: 'temp-' + Date.now(),
         ...entry,
-        created_at: new Date().toISOString()
-      }
-      
-      const formatted = {
-        id: mockInserted.id,
-        symptoms: mockInserted.symptoms,
-        mood: mockInserted.mood,
-        pain: mockInserted.pain,
-        notes: mockInserted.notes,
-        date: mockInserted.created_at
+        date: new Date().toISOString()
       }
 
       saveData({ ...data, symptoms: [...logs, formatted] })
@@ -97,6 +103,9 @@ export default function SymptomsJournal({ user, isAnonymous, data, saveData, sho
     return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
   }
 
+  const getSymptomIcon = (sid) => symptomsList.find(s => s.id === sid)?.icon || '💊'
+  const getMoodIcon = (mid) => moods.find(m => m.id === mid)?.icon || '😶'
+
   return (
     <div id="tab-symptoms" className="tab-content">
       <div className="page-header">
@@ -108,53 +117,68 @@ export default function SymptomsJournal({ user, isAnonymous, data, saveData, sho
       <div className="page-content">
         <div className="section-row">
           <div className="card">
-            <div className="card-title"><span>💊</span> {t('symptoms.log_title')} <span className="badge">{t('symptoms.today')}</span></div>
+            <div className="card-title"><span>💊</span> {t('symptoms.log_title')}</div>
             
-            <div className="symptom-section">
-              <label className="input-label">{t('symptoms.common')}</label>
-              <div className="symptom-tags">
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ fontSize: '11px', color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', display: 'block' }}>
+                {t('symptoms.common')}
+              </label>
+              <div className="symptom-grid">
                 {symptomsList.map(s => (
                   <div 
-                    key={s} 
-                    className={`symptom-tag ${selectedSymptoms.includes(s) ? 'active' : ''}`}
-                    onClick={() => toggleSymptom(s)}
+                    key={s.id} 
+                    className={`symptom-chip ${selectedSymptoms.includes(s.id) ? 'selected' : ''}`}
+                    onClick={() => toggleSymptom(s.id)}
                   >
-                    {t(`symptoms.${s}`)}
+                    <span className="s-icon">{s.icon}</span>
+                    {t(`symptoms.${s.id}`)}
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="input-row">
-              <div className="input-group">
-                <label>{t('symptoms.mood')}</label>
-                <select value={mood} onChange={e => setMood(e.target.value)}>
-                  <option value="">{t('symptoms.select_mood')}</option>
-                  {moods.map(m => (
-                    <option key={m} value={m}>{t(`symptoms.${m}`)}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="input-group">
-                <label>{t('symptoms.pain')} (0-10)</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <input type="range" min="0" max="10" value={pain} onChange={e => setPain(parseInt(e.target.value))} style={{ flex: 1 }} />
-                  <span style={{ minWidth: '20px', fontWeight: 'bold' }}>{pain}</span>
-                </div>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ fontSize: '11px', color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', display: 'block' }}>
+                {t('symptoms.mood')}
+              </label>
+              <div className="mood-grid">
+                {moods.map(m => (
+                  <div 
+                    key={m.id} 
+                    className={`mood-btn ${mood === m.id ? 'selected' : ''}`}
+                    onClick={() => setMood(m.id)}
+                  >
+                    <span className="m-icon">{m.icon}</span>
+                    {t(`symptoms.${m.id}`)}
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="input-group">
+            <div className="intensity-row">
+              <span className="intensity-label">{t('symptoms.pain')}</span>
+              <input 
+                type="range" 
+                min="0" 
+                max="10" 
+                value={pain} 
+                onChange={e => setPain(parseInt(e.target.value))} 
+              />
+              <span className="intensity-val">{pain}</span>
+            </div>
+
+            <div className="input-group" style={{ marginTop: '20px' }}>
               <label>{t('symptoms.notes')}</label>
               <textarea 
                 placeholder={t('symptoms.placeholder')} 
-                rows="3" 
                 value={notes} 
                 onChange={e => setNotes(e.target.value)}
               ></textarea>
             </div>
 
-            <button className="btn btn-primary" style={{ width: '100%' }} onClick={logSymptoms}>{t('symptoms.save')}</button>
+            <button className="btn btn-primary" style={{ width: '100%', marginTop: '20px' }} onClick={logSymptoms}>
+              {t('symptoms.save')}
+            </button>
           </div>
 
           <div className="card">
@@ -166,18 +190,24 @@ export default function SymptomsJournal({ user, isAnonymous, data, saveData, sho
                   {t('symptoms.empty')}
                 </div>
               ) : (
-                [...logs].reverse().slice(0, 10).map((log, i) => (
-                  <div key={i} className="history-entry">
+                [...logs].reverse().slice(0, 10).map((log) => (
+                  <div key={log.id} className="history-entry sym">
                     <div className="h-date">{formatDate(log.date)}</div>
                     <div className="h-text">
                       {log.symptoms?.length > 0 && (
-                        <div style={{ marginBottom: '4px' }}>
-                          {log.symptoms.map(s => <span key={s} className="mini-tag">{t(`symptoms.${s}`)}</span>)}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
+                          {log.symptoms.map(s => (
+                            <span key={s} style={{ fontSize: '10px', background: 'var(--surface3)', padding: '2px 8px', borderRadius: '10px', color: 'var(--text2)' }}>
+                              {getSymptomIcon(s)} {t(`symptoms.${s}`)}
+                            </span>
+                          ))}
                         </div>
                       )}
-                      {log.mood && <span>{t('symptoms.mood')}: <strong>{t(`symptoms.${log.mood}`)}</strong> · </span>}
-                      {log.pain > 0 && <span>{t('symptoms.pain')}: <strong>{log.pain}/10</strong></span>}
-                      {log.notes && <div className="h-notes">"{log.notes}"</div>}
+                      <div style={{ fontSize: '12px', color: 'var(--text2)' }}>
+                        {log.mood && <span>{getMoodIcon(log.mood)} <strong>{t(`symptoms.${log.mood}`)}</strong> · </span>}
+                        {log.pain > 0 && <span>{t('symptoms.pain')}: <strong>{log.pain}/10</strong></span>}
+                      </div>
+                      {log.notes && <div style={{ marginTop: '6px', fontStyle: 'italic', color: 'var(--text3)', borderLeft: '2px solid var(--border)', paddingLeft: '8px' }}>"{log.notes}"</div>}
                     </div>
                   </div>
                 ))

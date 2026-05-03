@@ -72,6 +72,8 @@ export default function MainApp() {
         const parsed = JSON.parse(stored)
         setData(prev => ({
           ...prev,
+          cycles: parsed.cycles || [],
+          symptoms: parsed.symptoms || [],
           medications: parsed.medications || [],
           notes: parsed.notes || [],
           pcosAssessments: parsed.pcosAssessments || [],
@@ -131,6 +133,8 @@ export default function MainApp() {
     setData(newData)
     // Only persist local-only tables to localStorage
     const localData = {
+      cycles: newData.cycles,
+      symptoms: newData.symptoms,
       medications: newData.medications,
       notes: newData.notes,
       pcosAssessments: newData.pcosAssessments,
