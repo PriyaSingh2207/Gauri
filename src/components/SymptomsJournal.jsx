@@ -1,39 +1,48 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useTranslation } from 'react-i18next'
 
 export default function SymptomsJournal({ user, isAnonymous, data, saveData, showToast }) {
-  const [selectedSymptoms, setSelectedSymptoms] = useState(new Set())
-  const [selectedMood, setSelectedMood] = useState('')
-  const [pain, setPain] = useState(3)
+  const { t } = useTranslation()
+  const [selectedSymptoms, setSelectedSymptoms] = useState([])
+  const [mood, setMood] = useState('')
+  const [pain, setPain] = useState(0)
   const [notes, setNotes] = useState('')
 
-  const symptoms = data.symptoms || []
+  const logs = data.symptoms || []
 
-  const toggleSym = (name) => {
-    const newSet = new Set(selectedSymptoms)
-    if (newSet.has(name)) newSet.delete(name)
-    else newSet.add(name)
-    setSelectedSymptoms(newSet)
+  const symptomsList = ['cramps', 'bloating', 'headache', 'acne', 'breast', 'fatigue']
+  const moods = ['happy', 'calm', 'anxious', 'sad', 'irritable', 'energetic']
+
+  const toggleSymptom = (s) => {
+    if (selectedSymptoms.includes(s)) {
+      setSelectedSymptoms(selectedSymptoms.filter(item => item !== s))
+    } else {
+      setSelectedSymptoms([...selectedSymptoms, s])
+    }
   }
 
   const logSymptoms = async () => {
-    if (!selectedSymptoms.size && !selectedMood) {
-      showToast('Select at least one symptom or mood')
+    if (selectedSymptoms.length === 0 && !notes.trim()) {
+      showToast(t('symptoms.msg_select'))
       return
     }
     if (!user) {
-      showToast('Waiting for authentication...')
+      showToast(t('cycle.msg_auth'))
       return
     }
 
+    const entry = {
+      symptoms: selectedSymptoms,
+      mood,
+      pain,
+      notes
+    }
+
     if (isAnonymous) {
-      // Don't save to Supabase for anonymous users
       const mockInserted = {
         id: 'temp-' + Date.now(),
-        symptoms: Array.from(selectedSymptoms),
-        mood: selectedMood,
-        pain: parseInt(pain),
-        notes,
+        ...entry,
         created_at: new Date().toISOString()
       }
       
@@ -46,21 +55,21 @@ export default function SymptomsJournal({ user, isAnonymous, data, saveData, sho
         date: mockInserted.created_at
       }
 
-      saveData({ ...data, symptoms: [...symptoms, formatted] })
-      showToast('Symptoms saved locally (Session only)')
+      saveData({ ...data, symptoms: [...logs, formatted] })
+      showToast(t('cycle.msg_local'))
     } else {
-      const entry = {
+      const newLog = {
         user_id: user.id,
-        symptoms: Array.from(selectedSymptoms),
-        mood: selectedMood,
-        pain: parseInt(pain),
-        notes
+        symptoms: entry.symptoms,
+        mood: entry.mood,
+        pain: entry.pain,
+        notes: entry.notes
       }
 
-      const { data: inserted, error } = await supabase.from('symptoms').insert([entry]).select()
+      const { data: inserted, error } = await supabase.from('symptoms').insert([newLog]).select()
 
       if (error) {
-        showToast('Error saving: ' + error.message)
+        showToast(t('cycle.msg_error') + error.message)
         return
       }
 
@@ -73,120 +82,107 @@ export default function SymptomsJournal({ user, isAnonymous, data, saveData, sho
         date: inserted[0].created_at
       }
 
-      saveData({ ...data, symptoms: [...symptoms, formatted] })
-      showToast('Symptoms saved!')
+      saveData({ ...data, symptoms: [...logs, formatted] })
+      showToast(t('symptoms.msg_saved'))
     }
-    clearSymptoms()
-  }
 
-  const clearSymptoms = () => {
-    setSelectedSymptoms(new Set())
-    setSelectedMood('')
-    setPain(3)
+    setSelectedSymptoms([])
+    setMood('')
+    setPain(0)
     setNotes('')
   }
 
   const formatDate = (iso) => {
     const d = new Date(iso)
-    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
   }
 
   return (
     <div id="tab-symptoms" className="tab-content">
       <div className="page-header">
         <div>
-          <div className="page-title">Symptom <em>Journal</em></div>
-          <div className="page-sub">Track how you feel — physically and emotionally</div>
+          <div className="page-title">{t('symptoms.title')} <em>{t('symptoms.subtitle')}</em></div>
+          <div className="page-sub">{t('symptoms.desc')}</div>
         </div>
       </div>
       <div className="page-content">
-        <div className="card" style={{marginBottom: 16}}>
-          <div className="card-title"><span>🌡️</span> Physical Symptoms</div>
-          <div className="symptom-grid">
-            {[
-              { id: 'cramps', icon: '😣', label: 'Cramps' },
-              { id: 'bloating', icon: '🫧', label: 'Bloating' },
-              { id: 'headache', icon: '🤕', label: 'Headache' },
-              { id: 'fatigue', icon: '😴', label: 'Fatigue' },
-              { id: 'backpain', icon: '🦴', label: 'Back Pain' },
-              { id: 'nausea', icon: '🤢', label: 'Nausea' },
-              { id: 'breast', icon: '⚡', label: 'Breast Pain' },
-              { id: 'acne', icon: '🔴', label: 'Acne' }
-            ].map(sym => (
-              <div 
-                key={sym.id}
-                className={`symptom-chip ${selectedSymptoms.has(sym.id) ? 'selected' : ''}`}
-                onClick={() => toggleSym(sym.id)}
-              >
-                <span className="s-icon">{sym.icon}</span>{sym.label}
-              </div>
-            ))}
-          </div>
-          <div className="intensity-row">
-            <span className="intensity-label">Pain intensity</span>
-            <input type="range" min="1" max="10" value={pain} onChange={e => setPain(e.target.value)} />
-            <span className="intensity-val">{pain}</span>
-            <span style={{fontSize: 11, color: 'var(--text3)'}}>/10</span>
-          </div>
-        </div>
-        
         <div className="section-row">
           <div className="card">
-            <div className="card-title"><span>🧠</span> Mood Today</div>
-            <div className="mood-grid">
-              {[
-                { id: 'Happy', icon: '😊' },
-                { id: 'Calm', icon: '😌' },
-                { id: 'Anxious', icon: '😰' },
-                { id: 'Sad', icon: '😢' },
-                { id: 'Irritable', icon: '😤' }
-              ].map(mood => (
-                <div 
-                  key={mood.id}
-                  className={`mood-btn ${selectedMood === mood.id ? 'selected' : ''}`}
-                  onClick={() => setSelectedMood(mood.id)}
-                >
-                  <span className="m-icon">{mood.icon}</span>{mood.id}
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="card">
-            <div className="card-title"><span>✍️</span> Notes</div>
-            <textarea 
-              placeholder="Describe how you're feeling... anything unusual?"
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-            ></textarea>
-            <div className="btn-row">
-              <button className="btn btn-primary" onClick={logSymptoms}>Save Entry</button>
-              <button className="btn btn-secondary" onClick={clearSymptoms}>Clear</button>
-              {isAnonymous && <span style={{ fontSize: '10px', color: 'var(--text3)', alignSelf: 'center', marginLeft: 'auto' }}>⚠ Session only</span>}
-            </div>
-          </div>
-        </div>
-        
-        <div className="card">
-          <div className="card-title"><span>📋</span> Recent Symptom Log</div>
-          <div className="history-list">
-            {symptoms.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">💊</div>
-                No symptoms logged yet.
-              </div>
-            ) : (
-              [...symptoms].reverse().map((s, i) => (
-                <div key={i} className="history-entry sym">
-                  <div className="h-date">{formatDate(s.date)}</div>
-                  <div className="h-text">
-                    {s.symptoms.length ? s.symptoms.join(', ') : ''}
-                    {s.mood ? (s.symptoms.length ? ` · Mood: ${s.mood}` : `Mood: ${s.mood}`) : ''} 
-                    {' '}· Pain: {s.pain}/10
-                    {s.notes ? ` · ${s.notes}` : ''}
+            <div className="card-title"><span>💊</span> {t('symptoms.log_title')} <span className="badge">{t('symptoms.today')}</span></div>
+            
+            <div className="symptom-section">
+              <label className="input-label">{t('symptoms.common')}</label>
+              <div className="symptom-tags">
+                {symptomsList.map(s => (
+                  <div 
+                    key={s} 
+                    className={`symptom-tag ${selectedSymptoms.includes(s) ? 'active' : ''}`}
+                    onClick={() => toggleSymptom(s)}
+                  >
+                    {t(`symptoms.${s}`)}
                   </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="input-row">
+              <div className="input-group">
+                <label>{t('symptoms.mood')}</label>
+                <select value={mood} onChange={e => setMood(e.target.value)}>
+                  <option value="">{t('symptoms.select_mood')}</option>
+                  {moods.map(m => (
+                    <option key={m} value={m}>{t(`symptoms.${m}`)}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="input-group">
+                <label>{t('symptoms.pain')} (0-10)</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <input type="range" min="0" max="10" value={pain} onChange={e => setPain(parseInt(e.target.value))} style={{ flex: 1 }} />
+                  <span style={{ minWidth: '20px', fontWeight: 'bold' }}>{pain}</span>
                 </div>
-              ))
-            )}
+              </div>
+            </div>
+
+            <div className="input-group">
+              <label>{t('symptoms.notes')}</label>
+              <textarea 
+                placeholder={t('symptoms.placeholder')} 
+                rows="3" 
+                value={notes} 
+                onChange={e => setNotes(e.target.value)}
+              ></textarea>
+            </div>
+
+            <button className="btn btn-primary" style={{ width: '100%' }} onClick={logSymptoms}>{t('symptoms.save')}</button>
+          </div>
+
+          <div className="card">
+            <div className="card-title"><span>📜</span> {t('symptoms.recent')}</div>
+            <div className="history-list">
+              {logs.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">📝</div>
+                  {t('symptoms.empty')}
+                </div>
+              ) : (
+                [...logs].reverse().slice(0, 10).map((log, i) => (
+                  <div key={i} className="history-entry">
+                    <div className="h-date">{formatDate(log.date)}</div>
+                    <div className="h-text">
+                      {log.symptoms?.length > 0 && (
+                        <div style={{ marginBottom: '4px' }}>
+                          {log.symptoms.map(s => <span key={s} className="mini-tag">{t(`symptoms.${s}`)}</span>)}
+                        </div>
+                      )}
+                      {log.mood && <span>{t('symptoms.mood')}: <strong>{t(`symptoms.${log.mood}`)}</strong> · </span>}
+                      {log.pain > 0 && <span>{t('symptoms.pain')}: <strong>{log.pain}/10</strong></span>}
+                      {log.notes && <div className="h-notes">"{log.notes}"</div>}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>

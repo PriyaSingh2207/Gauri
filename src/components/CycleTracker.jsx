@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useTranslation } from 'react-i18next'
 
 export default function CycleTracker({ user, isAnonymous, data, saveData, showToast }) {
+  const { t } = useTranslation()
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
   const [flow, setFlow] = useState('')
@@ -11,11 +13,11 @@ export default function CycleTracker({ user, isAnonymous, data, saveData, showTo
 
   const logPeriod = async () => {
     if (!start) {
-      showToast('Please enter a start date')
+      showToast(t('cycle.msg_start_date'))
       return
     }
     if (!user) {
-      showToast('Waiting for authentication...')
+      showToast(t('cycle.msg_auth'))
       return
     }
 
@@ -40,7 +42,7 @@ export default function CycleTracker({ user, isAnonymous, data, saveData, showTo
       }
 
       saveData({ ...data, cycles: [...cycles, formatted] })
-      showToast('Period logged locally (Session only)')
+      showToast(t('cycle.msg_local'))
     } else {
       const newCycle = {
         user_id: user.id,
@@ -53,7 +55,7 @@ export default function CycleTracker({ user, isAnonymous, data, saveData, showTo
       const { data: inserted, error } = await supabase.from('cycles').insert([newCycle]).select()
 
       if (error) {
-        showToast('Error saving: ' + error.message)
+        showToast(t('cycle.msg_error') + error.message)
         return
       }
 
@@ -67,7 +69,7 @@ export default function CycleTracker({ user, isAnonymous, data, saveData, showTo
       }
 
       saveData({ ...data, cycles: [...cycles, formatted] })
-      showToast('Period logged!')
+      showToast(t('cycle.msg_saved'))
     }
     setStart('')
     setEnd('')
@@ -94,7 +96,7 @@ export default function CycleTracker({ user, isAnonymous, data, saveData, showTo
       const nextDate = new Date(last.start)
       nextDate.setDate(nextDate.getDate() + last.cycleLen)
       const diff = Math.ceil((nextDate - new Date()) / (1000 * 86400))
-      nextDiffText = diff >= 0 ? diff : 'Overdue'
+      nextDiffText = diff >= 0 ? diff : t('cycle.overdue')
     }
   }
 
@@ -133,76 +135,76 @@ export default function CycleTracker({ user, isAnonymous, data, saveData, showTo
 
   const formatDate = (iso) => {
     const d = new Date(iso)
-    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+    return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
   }
 
   return (
     <div id="tab-cycle" className="tab-content">
       <div className="page-header">
         <div>
-          <div className="page-title">Cycle <em>Tracker</em></div>
-          <div className="page-sub">Log your menstrual cycle and predict upcoming phases</div>
+          <div className="page-title">{t('cycle.title')} <em>{t('cycle.subtitle')}</em></div>
+          <div className="page-sub">{t('cycle.desc')}</div>
         </div>
       </div>
       <div className="page-content">
         <div className="stats-row" id="cycle-stats">
           <div className="stat-card">
-            <div className="stat-val">{avgLen}{avgLen !== '—' && <span className="stat-unit"> days</span>}</div>
-            <div className="stat-lbl">Avg. cycle length</div>
+            <div className="stat-val">{avgLen}{avgLen !== '—' && <span className="stat-unit"> {t('cycle.days')}</span>}</div>
+            <div className="stat-lbl">{t('cycle.avg_cycle')}</div>
             <div className="stat-accent" style={{background: 'var(--cornflower)'}}></div>
           </div>
           <div className="stat-card">
-            <div className="stat-val">{avgPer}{avgPer !== '—' && <span className="stat-unit"> days</span>}</div>
-            <div className="stat-lbl">Avg. period length</div>
+            <div className="stat-val">{avgPer}{avgPer !== '—' && <span className="stat-unit"> {t('cycle.days')}</span>}</div>
+            <div className="stat-lbl">{t('cycle.avg_period')}</div>
             <div className="stat-accent" style={{background: 'var(--sky-deep)'}}></div>
           </div>
           <div className="stat-card">
-            <div className="stat-val">{nextDiffText}{nextDiffText !== '—' && nextDiffText !== 'Overdue' && <span className="stat-unit"> days</span>}</div>
-            <div className="stat-lbl">Days until next period</div>
+            <div className="stat-val">{nextDiffText}{nextDiffText !== '—' && nextDiffText !== t('cycle.overdue') && <span className="stat-unit"> {t('cycle.days')}</span>}</div>
+            <div className="stat-lbl">{t('cycle.next_period')}</div>
             <div className="stat-accent" style={{background: 'var(--crema)'}}></div>
           </div>
           <div className="stat-card">
             <div className="stat-val">{cycles.length}</div>
-            <div className="stat-lbl">Cycles logged</div>
+            <div className="stat-lbl">{t('cycle.logged')}</div>
             <div className="stat-accent" style={{background: 'var(--lace-mid)'}}></div>
           </div>
         </div>
         
         <div className="section-row">
           <div className="card">
-            <div className="card-title"><span>📅</span> Log Period</div>
+            <div className="card-title"><span>📅</span> {t('cycle.log_title')}</div>
             <div className="cycle-grid">
               <div className="input-group">
-                <label>Start Date</label>
+                <label>{t('cycle.start_date')}</label>
                 <input type="date" value={start} onChange={e => setStart(e.target.value)} />
               </div>
               <div className="input-group">
-                <label>End Date</label>
+                <label>{t('cycle.end_date')}</label>
                 <input type="date" value={end} onChange={e => setEnd(e.target.value)} />
               </div>
               <div className="input-group">
-                <label>Flow Intensity</label>
+                <label>{t('cycle.flow')}</label>
                 <select value={flow} onChange={e => setFlow(e.target.value)}>
-                  <option value="">Select flow</option>
-                  <option value="spotting">Spotting</option>
-                  <option value="light">Light</option>
-                  <option value="moderate">Moderate</option>
-                  <option value="heavy">Heavy</option>
+                  <option value="">{t('cycle.select_flow')}</option>
+                  <option value="spotting">{t('cycle.spotting')}</option>
+                  <option value="light">{t('cycle.light')}</option>
+                  <option value="moderate">{t('cycle.moderate')}</option>
+                  <option value="heavy">{t('cycle.heavy')}</option>
                 </select>
               </div>
               <div className="input-group">
-                <label>Cycle Length (days)</label>
+                <label>{t('cycle.cycle_len')}</label>
                 <input type="number" min="21" max="45" placeholder="28" value={cycleLen} onChange={e => setCycleLen(e.target.value)} />
               </div>
             </div>
             <div className="btn-row">
-              <button className="btn btn-primary" onClick={logPeriod}>Log Period</button>
-              {isAnonymous && <span style={{ fontSize: '10px', color: 'var(--text3)', alignSelf: 'center' }}>⚠ Not saved to cloud</span>}
+              <button className="btn btn-primary" onClick={logPeriod}>{t('cycle.log_title')}</button>
+              {isAnonymous && <span style={{ fontSize: '10px', color: 'var(--text3)', alignSelf: 'center' }}>⚠ {t('cycle.local_only')}</span>}
             </div>
           </div>
           
           <div className="card">
-            <div className="card-title"><span>🗓️</span> This Month</div>
+            <div className="card-title"><span>🗓️</span> {t('cycle.this_month')}</div>
             <div className="cycle-calendar">
               {days.map(d => <div key={d} className="cal-header">{d}</div>)}
               {emptyDays.map((_, i) => <div key={`empty-${i}`} className="cal-day empty"></div>)}
@@ -211,27 +213,27 @@ export default function CycleTracker({ user, isAnonymous, data, saveData, showTo
               ))}
             </div>
             <div className="legend">
-              <div className="legend-item"><div className="legend-dot" style={{background: 'rgba(194,24,91,0.5)'}}></div>Period</div>
-              <div className="legend-item"><div className="legend-dot" style={{background: 'rgba(212,160,23,0.5)'}}></div>Ovulation</div>
-              <div className="legend-item"><div className="legend-dot" style={{background: 'rgba(26,122,106,0.4)'}}></div>Fertile window</div>
+              <div className="legend-item"><div className="legend-dot" style={{background: 'rgba(194,24,91,0.5)'}}></div>{t('cycle.legend_period')}</div>
+              <div className="legend-item"><div className="legend-dot" style={{background: 'rgba(212,160,23,0.5)'}}></div>{t('cycle.legend_ovulation')}</div>
+              <div className="legend-item"><div className="legend-dot" style={{background: 'rgba(26,122,106,0.4)'}}></div>{t('cycle.legend_fertile')}</div>
             </div>
           </div>
         </div>
         
         <div className="card">
-          <div className="card-title"><span>📌</span> Cycle History</div>
+          <div className="card-title"><span>📌</span> {t('cycle.history')}</div>
           <div className="history-list">
             {cycles.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-icon">🩸</div>
-                No cycles logged yet. Start by adding a period above.
+                {t('cycle.empty')}
               </div>
             ) : (
               [...cycles].reverse().map((c, i) => (
                 <div key={i} className="history-entry">
                   <div className="h-date">{formatDate(c.date)}</div>
                   <div className="h-text">
-                    Period: <strong>{c.start}</strong>{c.end ? ` → ${c.end}` : ''} · Flow: {c.flow || '—'} · Cycle: {c.cycleLen} days
+                    {t('cycle.legend_period')}: <strong>{c.start}</strong>{c.end ? ` → ${c.end}` : ''} · {t('cycle.flow')}: {c.flow ? t(`cycle.${c.flow}`) : '—'} · {t('cycle.title')}: {c.cycleLen} {t('cycle.days')}
                   </div>
                 </div>
               ))

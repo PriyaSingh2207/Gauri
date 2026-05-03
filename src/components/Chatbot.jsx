@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function Chatbot({ data }) {
+  const { t, i18n } = useTranslation();
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: "Hello! I'm your Gauri AI health assistant. Based on your logged data, how can I help you today?" }
+    { role: 'assistant', content: t('chatbot.intro') }
   ]);
   const [inputMsg, setInputMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -39,7 +41,7 @@ export default function Chatbot({ data }) {
 
     if (data?.breastAssessments?.length) {
       const latestBreast = data.breastAssessments[data.breastAssessments.length - 1];
-      context += `- Latest Breast Health Assessment: Risk Level [${latestBreast.riskLevel.toUpperCase()}]. Symptoms noted: ${latestBreast.symptoms.join(', ') || 'None'}.\n`;
+      context += `- Latest Breast Health Assessment: Risk Level [${latestBreast.riskLevel?.toUpperCase()}]. Symptoms noted: ${latestBreast.symptoms?.join(', ') || 'None'}.\n`;
     }
 
     if (data?.medications?.length) {
@@ -59,14 +61,17 @@ export default function Chatbot({ data }) {
 
     try {
       const contextString = getContextString();
+      const languageName = t('chatbot.lang_name');
       
       const systemPrompt = `You are Gauri, an empathetic, knowledgeable, and privacy-focused AI health assistant for women. 
 You must analyze the user's logged health data to provide insights and answer their questions.
 If you notice high PCOS risk, severe pain, or irregular cycles, provide a risk assessment percentage and strongly recommend they consult a specialist.
 
+IMPORTANT: You must respond in ${languageName}. All your responses must be in ${languageName}.
+
 ${contextString}
 
-Note: Always add a disclaimer that you are an AI and not a substitute for professional medical advice.`;
+Note: Always add a disclaimer that you are an AI and not a substitute for professional medical advice. The disclaimer must also be in ${languageName}.`;
 
       const apiMessages = newMessages.map(m => ({
         role: m.role === 'assistant' ? 'model' : m.role,
@@ -102,7 +107,7 @@ Note: Always add a disclaimer that you are an AI and not a substitute for profes
       setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
     } catch (error) {
       console.error(error);
-      setMessages(prev => [...prev, { role: 'assistant', content: "I'm sorry, I encountered an error while trying to process your request. Please try again later." }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: t('chatbot.error') }]);
     } finally {
       setIsLoading(false);
     }
@@ -118,9 +123,9 @@ Note: Always add a disclaimer that you are an AI and not a substitute for profes
   return (
     <div className="card" style={{ height: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-        <h2>Gauri AI Assistant</h2>
+        <h2>{t('chatbot.title')}</h2>
         <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', margin: 0 }}>
-          Ask questions about your health, get insights from your logged data, and receive personalized recommendations.
+          {t('chatbot.desc')}
         </p>
       </div>
 
@@ -153,7 +158,7 @@ Note: Always add a disclaimer that you are an AI and not a substitute for profes
             value={inputMsg}
             onChange={(e) => setInputMsg(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="Ask about your health data..."
+            placeholder={t('chatbot.placeholder')}
             className="input-field"
             style={{ 
               flex: 1, 
@@ -168,7 +173,7 @@ Note: Always add a disclaimer that you are an AI and not a substitute for profes
             className="btn btn-primary"
             style={{ width: 'auto', padding: '0 20px', display: 'flex', alignItems: 'center' }}
           >
-            Send
+            {t('chatbot.send')}
           </button>
         </div>
       </div>

@@ -10,6 +10,9 @@ export default function ProfileTab({ session }) {
     highest_education: '',
     experience_years: '',
     city: '',
+    phone: '',
+    latitude: '',
+    longitude: '',
     bio: '',
     avatar_url: ''
   });
@@ -25,7 +28,7 @@ export default function ProfileTab({ session }) {
 
       let { data, error, status } = await supabase
         .from('specialist_profiles')
-        .select(`full_name, specialty, highest_education, experience_years, city, bio, avatar_url`)
+        .select(`full_name, specialty, highest_education, experience_years, city, phone, latitude, longitude, bio, avatar_url`)
         .eq('user_id', user.id)
         .single();
 
@@ -118,14 +121,48 @@ export default function ProfileTab({ session }) {
             </div>
           </div>
 
-          <div className="input-group">
-            <label>City / Location</label>
-            <input
-              type="text"
-              value={profile.city || ''}
-              onChange={(e) => setProfile({ ...profile, city: e.target.value })}
-              required
-            />
+          <div className="form-row">
+            <div className="input-group">
+              <label>City / Location</label>
+              <input
+                type="text"
+                value={profile.city || ''}
+                onChange={(e) => setProfile({ ...profile, city: e.target.value })}
+                required
+              />
+            </div>
+            <div className="input-group">
+              <label>Phone / Contact</label>
+              <input
+                type="text"
+                value={profile.phone || ''}
+                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                placeholder="+1 234 567 890"
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="input-group">
+              <label>Latitude (for Map)</label>
+              <input
+                type="number"
+                step="any"
+                value={profile.latitude || ''}
+                onChange={(e) => setProfile({ ...profile, latitude: e.target.value })}
+                placeholder="e.g. 28.6139"
+              />
+            </div>
+            <div className="input-group">
+              <label>Longitude (for Map)</label>
+              <input
+                type="number"
+                step="any"
+                value={profile.longitude || ''}
+                onChange={(e) => setProfile({ ...profile, longitude: e.target.value })}
+                placeholder="e.g. 77.2090"
+              />
+            </div>
           </div>
 
           <div className="input-group">

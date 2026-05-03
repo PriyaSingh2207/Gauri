@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { useTranslation } from 'react-i18next'
 import Sidebar from './Sidebar'
 import CycleTracker from './CycleTracker'
 import SymptomsJournal from './SymptomsJournal'
@@ -9,12 +10,16 @@ import HealthLog from './HealthLog'
 import BreastHealth from './BreastHealth'
 import UserAuth from './UserAuth'
 import Chatbot from './Chatbot'
+import SpecialistTracker from './SpecialistTracker'
+import Learn from './Learn'
 
 export default function MainApp() {
-  const [activeTab, setActiveTab] = useState('cycle')
+  const { t, i18n } = useTranslation()
+  const [activeTab, setActiveTab] = useState('learn')
   const [user, setUser] = useState(null)
   const [isAnonymous, setIsAnonymous] = useState(true)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   
   // Data state
   const [data, setData] = useState({
@@ -140,23 +145,88 @@ export default function MainApp() {
     setTimeout(() => setToastMsg(''), 2500)
   }
 
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng)
+  }
+
+  const tabNames = {
+    learn: t('nav.learn'),
+    cycle: t('nav.cycle'),
+    symptoms: t('nav.symptoms'),
+    pcos: t('nav.pcos'),
+    breast: t('nav.breast'),
+    meds: t('nav.meds'),
+    history: t('nav.history'),
+    specialists: t('nav.specialists'),
+    chat: t('nav.chat')
+  }
+
   return (
     <div className="app">
       <Sidebar 
         activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
+        setActiveTab={(tab) => {
+          setActiveTab(tab)
+          setSidebarOpen(false)
+        }} 
         user={user} 
         isAnonymous={isAnonymous} 
         onLoginClick={() => setShowAuthModal(true)} 
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
       <div className="main" id="main-content">
-        {activeTab === 'cycle' && <CycleTracker user={user} isAnonymous={isAnonymous} data={data} saveData={saveData} showToast={showToast} />}
-        {activeTab === 'symptoms' && <SymptomsJournal user={user} isAnonymous={isAnonymous} data={data} saveData={saveData} showToast={showToast} />}
-        {activeTab === 'pcos' && <PcosChecker data={data} saveData={saveData} showToast={showToast} />}
-        {activeTab === 'breast' && <BreastHealth data={data} saveData={saveData} showToast={showToast} />}
-        {activeTab === 'meds' && <Medications data={data} saveData={saveData} showToast={showToast} />}
-        {activeTab === 'history' && <HealthLog data={data} saveData={saveData} showToast={showToast} />}
-        {activeTab === 'chat' && <Chatbot data={data} />}
+        <header className="top-bar">
+          <div className="top-bar-left">
+            <button 
+              className="mobile-menu-btn"
+              style={{ display: 'none' }}
+              onClick={() => setSidebarOpen(true)}
+            >
+              ☰
+            </button>
+            <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text2)', marginLeft: '10px' }}>
+              {tabNames[activeTab]}
+            </h3>
+          </div>
+          
+          <div className="top-bar-right">
+            <div className="lang-select-wrapper">
+              <button className={`lang-option ${i18n.language === 'en' ? 'active' : ''}`} onClick={() => changeLanguage('en')}>EN</button>
+              <button className={`lang-option ${i18n.language === 'hi' ? 'active' : ''}`} onClick={() => changeLanguage('hi')}>हिन्दी</button>
+              <button className={`lang-option ${i18n.language === 'mr' ? 'active' : ''}`} onClick={() => changeLanguage('mr')}>मराठी</button>
+              <button className={`lang-option ${i18n.language === 'bn' ? 'active' : ''}`} onClick={() => changeLanguage('bn')}>বাংলা</button>
+            </div>
+
+            {isAnonymous ? (
+              <button className="user-nav-btn" onClick={() => setShowAuthModal(true)}>
+                <span>🔑</span> {t('auth.login')}
+              </button>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div className="user-nav-btn">
+                  <div className="user-avatar-mini">{user?.email?.charAt(0).toUpperCase()}</div>
+                  <span style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</span>
+                </div>
+                <button className="btn btn-secondary btn-sm" onClick={() => supabase.auth.signOut()} style={{ padding: '6px 12px', fontSize: '11px' }}>
+                  {t('auth.logout')}
+                </button>
+              </div>
+            )}
+          </div>
+        </header>
+
+        <div className="main-content-scroll">
+          {activeTab === 'learn' && <Learn user={user} />}
+          {activeTab === 'cycle' && <CycleTracker user={user} isAnonymous={isAnonymous} data={data} saveData={saveData} showToast={showToast} />}
+          {activeTab === 'symptoms' && <SymptomsJournal user={user} isAnonymous={isAnonymous} data={data} saveData={saveData} showToast={showToast} />}
+          {activeTab === 'pcos' && <PcosChecker data={data} saveData={saveData} showToast={showToast} />}
+          {activeTab === 'breast' && <BreastHealth data={data} saveData={saveData} showToast={showToast} />}
+          {activeTab === 'meds' && <Medications data={data} saveData={saveData} showToast={showToast} />}
+          {activeTab === 'history' && <HealthLog data={data} saveData={saveData} showToast={showToast} />}
+          {activeTab === 'chat' && <Chatbot data={data} />}
+          {activeTab === 'specialists' && <SpecialistTracker user={user} />}
+        </div>
       </div>
       <div className={`toast ${toastMsg ? 'show' : ''}`} id="toast">
         ✓ {toastMsg}

@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export default function Medications({ data, saveData, showToast }) {
+  const { t } = useTranslation()
   const [medName, setMedName] = useState('')
   const [medDose, setMedDose] = useState('')
   const [medFreq, setMedFreq] = useState('')
@@ -11,7 +13,7 @@ export default function Medications({ data, saveData, showToast }) {
 
   const addMed = () => {
     if (!medName.trim()) {
-      showToast('Please enter a medication name')
+      showToast(t('meds.msg_name'))
       return
     }
     const newMed = {
@@ -25,7 +27,7 @@ export default function Medications({ data, saveData, showToast }) {
     setMedName('')
     setMedDose('')
     setMedFreq('')
-    showToast('Medication added!')
+    showToast(t('meds.msg_added'))
   }
 
   const deleteMed = (id) => {
@@ -34,7 +36,7 @@ export default function Medications({ data, saveData, showToast }) {
 
   const saveNote = () => {
     if (!noteText.trim()) {
-      showToast('Please write a note first')
+      showToast(t('meds.msg_note'))
       return
     }
     const newNote = {
@@ -43,76 +45,82 @@ export default function Medications({ data, saveData, showToast }) {
     }
     saveData({ ...data, notes: [...notes, newNote] })
     setNoteText('')
-    showToast('Note saved!')
+    showToast(t('meds.msg_note_saved'))
   }
 
   const formatDate = (iso) => {
     const d = new Date(iso)
-    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
   }
+
+  const freqOptions = [
+    { label: t('meds.once'), val: 'once' },
+    { label: t('meds.twice'), val: 'twice' },
+    { label: t('meds.thrice'), val: 'thrice' },
+    { label: t('meds.weekly'), val: 'weekly' },
+    { label: t('meds.needed'), val: 'needed' }
+  ]
 
   return (
     <div id="tab-meds" className="tab-content">
       <div className="page-header">
         <div>
-          <div className="page-title">Medications <em>& Notes</em></div>
-          <div className="page-sub">Track your medicines, supplements and health notes</div>
+          <div className="page-title">{t('meds.title')} <em>{t('meds.subtitle')}</em></div>
+          <div className="page-sub">{t('meds.desc')}</div>
         </div>
       </div>
       <div className="page-content">
         <div className="section-row">
           <div className="card">
-            <div className="card-title"><span>💊</span> Add Medication</div>
+            <div className="card-title"><span>💊</span> {t('meds.add_title')}</div>
             <div className="input-group" style={{marginBottom: 10}}>
-              <label>Medication / Supplement Name</label>
-              <input type="text" placeholder="e.g. Folic Acid 5mg" value={medName} onChange={e => setMedName(e.target.value)} />
+              <label>{t('meds.name_label')}</label>
+              <input type="text" placeholder={t('meds.name_placeholder')} value={medName} onChange={e => setMedName(e.target.value)} />
             </div>
             <div className="med-form">
               <div className="input-group">
-                <label>Dosage</label>
-                <input type="text" placeholder="e.g. 1 tablet" value={medDose} onChange={e => setMedDose(e.target.value)} />
+                <label>{t('meds.dose_label')}</label>
+                <input type="text" placeholder={t('meds.dose_placeholder')} value={medDose} onChange={e => setMedDose(e.target.value)} />
               </div>
               <div className="input-group">
-                <label>Frequency</label>
+                <label>{t('meds.freq_label')}</label>
                 <select value={medFreq} onChange={e => setMedFreq(e.target.value)}>
-                  <option value="">Select</option>
-                  <option>Once daily</option>
-                  <option>Twice daily</option>
-                  <option>Three times daily</option>
-                  <option>Weekly</option>
-                  <option>As needed</option>
+                  <option value="">{t('meds.select')}</option>
+                  {freqOptions.map(opt => (
+                    <option key={opt.val} value={opt.val}>{opt.label}</option>
+                  ))}
                 </select>
               </div>
-              <button className="btn btn-primary btn-sm" onClick={addMed} style={{alignSelf: 'flex-end', whiteSpace: 'nowrap'}}>+ Add</button>
+              <button className="btn btn-primary btn-sm" onClick={addMed} style={{alignSelf: 'flex-end', whiteSpace: 'nowrap'}}>{t('meds.add_btn')}</button>
             </div>
           </div>
           <div className="card">
-            <div className="card-title"><span>📝</span> Health Notes</div>
+            <div className="card-title"><span>📝</span> {t('meds.notes_title')}</div>
             <textarea 
-              placeholder="Any notes for your next doctor visit, questions you want to ask, or health observations..."
+              placeholder={t('meds.notes_placeholder')}
               value={noteText}
               onChange={e => setNoteText(e.target.value)}
             ></textarea>
             <div className="btn-row">
-              <button className="btn btn-primary" onClick={saveNote}>Save Note</button>
+              <button className="btn btn-primary" onClick={saveNote}>{t('meds.save_note')}</button>
             </div>
           </div>
         </div>
         
         <div className="card">
-          <div className="card-title"><span>💉</span> Current Medications</div>
+          <div className="card-title"><span>💉</span> {t('meds.current_title')}</div>
           <div className="med-list">
             {medications.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-icon">💊</div>
-                No medications added yet.
+                {t('meds.empty_meds')}
               </div>
             ) : (
               medications.map(m => (
                 <div key={m.id} className="med-item">
                   <div className="med-info">
                     <div className="med-name">{m.name}</div>
-                    <div className="med-detail">{m.dose || '—'} · {m.freq || '—'}</div>
+                    <div className="med-detail">{m.dose || '—'} · {t(`meds.${m.freq}`) || '—'}</div>
                   </div>
                   <button className="med-delete" onClick={() => deleteMed(m.id)}>✕</button>
                 </div>
@@ -122,12 +130,12 @@ export default function Medications({ data, saveData, showToast }) {
         </div>
         
         <div className="card" style={{marginTop: 16}}>
-          <div className="card-title"><span>📋</span> Saved Notes</div>
+          <div className="card-title"><span>📋</span> {t('meds.saved_notes')}</div>
           <div className="history-list">
             {notes.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-icon">📝</div>
-                No notes saved yet.
+                {t('meds.empty_notes')}
               </div>
             ) : (
               [...notes].reverse().map((n, i) => (

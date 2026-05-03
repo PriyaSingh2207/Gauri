@@ -1,60 +1,71 @@
-import React from 'react'
 import { supabase } from '../lib/supabase'
+import { useTranslation } from 'react-i18next'
 
-export default function Sidebar({ activeTab, setActiveTab, user, isAnonymous, onLoginClick }) {
+export default function Sidebar({ activeTab, setActiveTab, user, isAnonymous, onLoginClick, isOpen, onClose }) {
+  const { t, i18n } = useTranslation()
+
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng)
+  }
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${isOpen ? 'open' : ''}`}>
+      <button 
+        className="close-sidebar-btn" 
+        style={{ 
+          position: 'absolute', 
+          top: '10px', 
+          right: '10px', 
+          background: 'none', 
+          border: 'none', 
+          color: '#fff', 
+          fontSize: '20px', 
+          cursor: 'pointer',
+          display: 'none'
+        }}
+        onClick={onClose}
+      >
+        ✕
+      </button>
       <div className="brand">
-        <div className="brand-icon">G</div>
+        <div className="brand-icon" style={{ overflow: 'hidden', padding: 0 }}>
+          <img src="/logo.jpeg" alt="Gauri Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </div>
         <div className="brand-name">Gauri</div>
         <div className="brand-sub">Health Companion</div>
       </div>
       <nav className="nav">
+        <div className={`nav-item ${activeTab === 'learn' ? 'active' : ''}`} onClick={() => setActiveTab('learn')}>
+          <span className="nav-icon">🎓</span> {t('nav.learn')}
+        </div>
         <div className={`nav-item ${activeTab === 'cycle' ? 'active' : ''}`} onClick={() => setActiveTab('cycle')}>
-          <span className="nav-icon">🩸</span> Cycle Tracker
+          <span className="nav-icon">🩸</span> {t('nav.cycle')}
         </div>
         <div className={`nav-item ${activeTab === 'symptoms' ? 'active' : ''}`} onClick={() => setActiveTab('symptoms')}>
-          <span className="nav-icon">💊</span> Symptoms
+          <span className="nav-icon">💊</span> {t('nav.symptoms')}
         </div>
         <div className={`nav-item ${activeTab === 'pcos' ? 'active' : ''}`} onClick={() => setActiveTab('pcos')}>
-          <span className="nav-icon">🧬</span> PCOS Risk
+          <span className="nav-icon">🧬</span> {t('nav.pcos')}
         </div>
         <div className={`nav-item ${activeTab === 'breast' ? 'active' : ''}`} onClick={() => setActiveTab('breast')}>
-          <span className="nav-icon">🎗️</span> Breast Health
+          <span className="nav-icon">🎗️</span> {t('nav.breast')}
         </div>
         <div className={`nav-item ${activeTab === 'meds' ? 'active' : ''}`} onClick={() => setActiveTab('meds')}>
-          <span className="nav-icon">💉</span> Medications
+          <span className="nav-icon">💉</span> {t('nav.meds')}
         </div>
         <div className={`nav-item ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>
-          <span className="nav-icon">📋</span> Health Log
+          <span className="nav-icon">📋</span> {t('nav.history')}
+        </div>
+        <div className={`nav-item ${activeTab === 'specialists' ? 'active' : ''}`} onClick={() => setActiveTab('specialists')}>
+          <span className="nav-icon">📍</span> {t('nav.specialists')}
         </div>
         <div className={`nav-item ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveTab('chat')}>
-          <span className="nav-icon">🤖</span> Gauri
+          <span className="nav-icon">🤖</span> {t('nav.chat')}
+        </div>
+        <div className="nav-separator" style={{ height: '1px', background: 'rgba(255,255,255,0.15)', margin: '12px 0' }}></div>
+        <div className="nav-item" onClick={() => window.location.href='/specialist-login'}>
+          <span className="nav-icon">🩺</span> {t('auth.specialist_login')}
         </div>
       </nav>
-      <div className="sidebar-footer">
-        {isAnonymous ? (
-          <div className="auth-section">
-            <div className="privacy-badge">🔒 Anonymous Mode</div>
-            <button className="btn btn-secondary btn-sm" style={{ width: '100%', marginTop: '12px', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff' }} onClick={onLoginClick}>
-              Login / Sign Up
-            </button>
-          </div>
-        ) : (
-          <div className="auth-section">
-            <div className="user-info" style={{ color: 'rgba(255,255,255,0.9)', fontSize: '11px', marginBottom: '8px', lineHeight: '1.4' }}>
-              Logged in as: <br/>
-              <strong style={{ fontSize: '10px', wordBreak: 'break-all', opacity: 0.8 }}>{user?.email}</strong>
-            </div>
-            <button className="btn btn-secondary btn-sm" style={{ width: '100%', background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)' }} onClick={() => supabase.auth.signOut()}>
-              Logout
-            </button>
-          </div>
-        )}
-        <div style={{ marginTop: '12px', textAlign: 'center' }}>
-          <a href="/specialist-login" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', textDecoration: 'none' }}>Specialist Login</a>
-        </div>
-      </div>
     </div>
   )
 }

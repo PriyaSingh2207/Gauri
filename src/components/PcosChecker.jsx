@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export default function PcosChecker({ data, saveData, showToast }) {
+  const { t } = useTranslation()
   const [checkedItems, setCheckedItems] = useState(new Set())
   const [riskPct, setRiskPct] = useState(0)
 
   const items = [
-    { id: '1', label: 'Irregular periods (>35 day cycles)', weight: 15 },
-    { id: '2', label: 'Missed periods (3+ months)', weight: 12 },
-    { id: '3', label: 'Excess facial/body hair', weight: 10 },
-    { id: '4', label: 'Thinning hair / hair loss', weight: 10 },
-    { id: '5', label: 'Persistent acne on face/back', weight: 8 },
-    { id: '6', label: 'Unexplained weight gain', weight: 8 },
-    { id: '7', label: 'Difficulty losing weight', weight: 7 },
-    { id: '8', label: 'Darkened skin patches (neck/armpits)', weight: 7 },
-    { id: '9', label: 'Mood swings / depression', weight: 6 },
-    { id: '10', label: 'Difficulty conceiving', weight: 5 },
-    { id: '11', label: 'Fatigue & low energy', weight: 5 },
-    { id: '12', label: 'Pelvic pain or pressure', weight: 7 },
+    { id: '1', label: t('pcos.item1'), weight: 15 },
+    { id: '2', label: t('pcos.item2'), weight: 12 },
+    { id: '3', label: t('pcos.item3'), weight: 10 },
+    { id: '4', label: t('pcos.item4'), weight: 10 },
+    { id: '5', label: t('pcos.item5'), weight: 8 },
+    { id: '6', label: t('pcos.item6'), weight: 8 },
+    { id: '7', label: t('pcos.item7'), weight: 7 },
+    { id: '8', label: t('pcos.item8'), weight: 7 },
+    { id: '9', label: t('pcos.item9'), weight: 6 },
+    { id: '10', label: t('pcos.item10'), weight: 5 },
+    { id: '11', label: t('pcos.item11'), weight: 5 },
+    { id: '12', label: t('pcos.item12'), weight: 7 },
   ]
 
   useEffect(() => {
@@ -45,41 +47,41 @@ export default function PcosChecker({ data, saveData, showToast }) {
       date: new Date().toISOString()
     }
     saveData({ ...data, pcosAssessments: [...(data.pcosAssessments || []), entry] })
-    showToast('PCOS assessment saved!')
+    showToast(t('pcos.msg_saved'))
   }
 
   let barBg = '#6A8FD8'
   let scoreColor = '#3F6ABF'
-  let noteText = 'Low risk. Keep monitoring your cycle health.'
+  let noteText = t('pcos.risk_low')
 
   if (riskPct >= 25 && riskPct < 55) {
     barBg = '#C8A97A'
     scoreColor = '#8B6340'
-    noteText = 'Moderate risk. Consider discussing this with a gynecologist.'
+    noteText = t('pcos.risk_mod')
   } else if (riskPct >= 55) {
     barBg = '#B85C5C'
     scoreColor = '#8B2020'
-    noteText = 'High risk. We strongly recommend a consultation with a gynecologist soon.'
+    noteText = t('pcos.risk_high')
   }
   
   if (riskPct === 0 && checkedItems.size === 0) {
     scoreColor = 'var(--teal-light)'
     barBg = 'var(--teal)'
-    noteText = 'Select symptoms above to see your risk level.'
+    noteText = t('pcos.risk_empty')
   }
 
   return (
     <div id="tab-pcos" className="tab-content">
       <div className="page-header">
         <div>
-          <div className="page-title">PCOS <em>Risk</em> Checker</div>
-          <div className="page-sub">Select symptoms you experience regularly to assess your PCOS risk</div>
+          <div className="page-title">{t('pcos.title')} <em>{t('pcos.subtitle')}</em></div>
+          <div className="page-sub">{t('pcos.desc')}</div>
         </div>
       </div>
       <div className="page-content">
         <div className="section-row">
           <div className="card">
-            <div className="card-title"><span>🧬</span> Hormonal Indicators</div>
+            <div className="card-title"><span>🧬</span> {t('pcos.indicators')}</div>
             <div className="pcos-indicators">
               {items.map(item => (
                 <div 
@@ -94,10 +96,10 @@ export default function PcosChecker({ data, saveData, showToast }) {
             </div>
           </div>
           <div className="card" style={{display: 'flex', flexDirection: 'column'}}>
-            <div className="card-title"><span>📊</span> Risk Assessment</div>
+            <div className="card-title"><span>📊</span> {t('pcos.assessment')}</div>
             <div className="risk-meter">
               <div className="risk-header">
-                <span className="risk-title">Estimated PCOS Risk</span>
+                <span className="risk-title">{t('pcos.estimated')}</span>
                 <span className="risk-score" style={{color: scoreColor}}>{riskPct}%</span>
               </div>
               <div className="risk-bar-track">
@@ -107,11 +109,11 @@ export default function PcosChecker({ data, saveData, showToast }) {
             </div>
             <div style={{flex: 1}}></div>
             <div style={{padding: 16, background: 'rgba(237,217,184,0.3)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(200,169,122,0.3)', marginTop: 16}}>
-              <div style={{fontSize: 11, color: 'var(--crema-dark)', marginBottom: 8, letterSpacing: 1, textTransform: 'uppercase'}}>⚠ Disclaimer</div>
-              <div style={{fontSize: 12, color: 'var(--text3)', lineHeight: 1.7}}>This tool is for awareness only — not a medical diagnosis. A gynecologist can confirm PCOS through blood tests and ultrasound.</div>
+              <div style={{fontSize: 11, color: 'var(--crema-dark)', marginBottom: 8, letterSpacing: 1, textTransform: 'uppercase'}}>⚠ {t('pcos.disclaimer')}</div>
+              <div style={{fontSize: 12, color: 'var(--text3)', lineHeight: 1.7}}>{t('pcos.disclaimer_text')}</div>
             </div>
             <div className="btn-row">
-              <button className="btn btn-primary" onClick={saveAssessment}>Save Assessment</button>
+              <button className="btn btn-primary" onClick={saveAssessment}>{t('pcos.save')}</button>
             </div>
           </div>
         </div>
